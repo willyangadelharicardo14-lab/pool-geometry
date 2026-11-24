@@ -1,31 +1,39 @@
 
-name: Extract Android Project
+name: Build Pool Geometry APK
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  extract:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download repository
+      - name: Download project
         uses: actions/checkout@v4
 
-      - name: Extract project ZIP
-        run: |
-          mkdir -p /tmp/pool-project
-          unzip -o Pool_Geometry_Android_Overlay_Starter.zip -d /tmp/pool-project
-          cp -a /tmp/pool-project/PoolGeometry_Android_Overlay/. .
-          rm Pool_Geometry_Android_Overlay_Starter.zip
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-      - name: Save extracted files
+      - name: Install Gradle 8.13
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Extract Android project files" || echo "No changes"
-          git push
+          wget https://services.gradle.org/distributions/gradle-8.13-bin.zip
+          unzip -q gradle-8.13-bin.zip
+          echo "$GITHUB_WORKSPACE/gradle-8.13/bin" >> "$GITHUB_PATH"
+
+      - name: Build Android APK
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pool-Geometry-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
