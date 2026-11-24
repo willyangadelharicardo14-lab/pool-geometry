@@ -1,0 +1,31 @@
+
+name: Extract Android Project
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          mkdir -p /tmp/pool-project
+          unzip -o Pool_Geometry_Android_Overlay_Starter.zip -d /tmp/pool-project
+          cp -a /tmp/pool-project/PoolGeometry_Android_Overlay/. .
+          rm Pool_Geometry_Android_Overlay_Starter.zip
+
+      - name: Save extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Extract Android project files" || echo "No changes"
+          git push
